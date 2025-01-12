@@ -1,97 +1,84 @@
-const PastebinAPI = require('pastebin-js'),
-pastebin = new PastebinAPI('EMWTMkQAVfJa9kM-MRUrxd5Oku1U7pgL')
-const {makeid} = require('./id');
-const express = require('express');
 const fs = require('fs');
-let router = express.Router()
-const pino = require("pino");
+const { makeid } = require('./id');
+const pino = require('pino');
 const {
-    default: Gifted_Tech,
-    useMultiFileAuthState,
-    delay,
-    makeCacheableSignalKeyStore,
-    Browsers
-} = require("maher-zubair-baileys");
+  default: Gifted_Tech,
+  useMultiFileAuthState,
+  delay,
+  makeCacheableSignalKeyStore,
+} = require('maher-zubair-baileys');
 
-function removeFile(FilePath){
-    if(!fs.existsSync(FilePath)) return false;
-    fs.rmSync(FilePath, { recursive: true, force: true })
- };
-router.get('/', async (req, res) => {
-    const id = makeid();
-    let num = req.query.number;
-        async function GIFTED_MD_PAIR_CODE() {
-        const {
-            state,
-            saveCreds
-        } = await useMultiFileAuthState('./temp/'+id)
-     try {
-            let Pair_Code_By_Gifted_Tech = Gifted_Tech({
-                auth: {
-                    creds: state.creds,
-                    keys: makeCacheableSignalKeyStore(state.keys, pino({level: "fatal"}).child({level: "fatal"})),
-                },
-                printQRInTerminal: false,
-                logger: pino({level: "fatal"}).child({level: "fatal"}),
-                browser: ["Chrome (Linux)", "", ""]
-             });
-             if(!Pair_Code_By_Gifted_Tech.authState.creds.registered) {
-                await delay(1500);
-                        num = num.replace(/[^0-9]/g,'');
-                            const code = await Pair_Code_By_Gifted_Tech.requestPairingCode(num)
-                 if(!res.headersSent){
-                 await res.send({code});
-                     }
-                 }
-            Pair_Code_By_Gifted_Tech.ev.on('creds.update', saveCreds)
-            Pair_Code_By_Gifted_Tech.ev.on("connection.update", async (s) => {
-                const {
-                    connection,
-                    lastDisconnect
-                } = s;
-                if (connection == "open") {
-                await delay(5000);
-                let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
-                await delay(800);
-               let b64data = Buffer.from(data).toString('base64');
-               let session = await Pair_Code_By_Gifted_Tech.sendMessage(Pair_Code_By_Gifted_Tech.user.id, { text: '' + b64data });
+function removeFile(filePath) {
+  if (fs.existsSync(filePath)) {
+    fs.rmSync(filePath, { recursive: true, force: true });
+  }
+}
 
-               let GIFTED_MD_TEXT = `
-┏━━━━━━━━━━━━━━
-┃𝙃𝘼𝙉𝙎-𝙈𝘿 𝙎𝙀𝙎𝙎𝙄𝙊𝙉 𝙄𝙎 
-┃𝙎𝙐𝘾𝘾𝙀𝙎𝙎𝙁𝙐𝙇𝙇𝙔
-┃𝘾𝙊𝙉𝙉𝙀𝘾𝙏𝙀𝘿 ✅🔥
-┗━━━━━━━━━━━━━━━
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-❶ || Creator = ✰ HANSTZ TECH ✰
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-❷ || WhattsApp Channel = https://whatsapp.com/channel/0029VasiOoR3bbUw5aV4qB31
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-Chat me 👉 https://wa.me/255760774888
-𝕋ℍ𝕀𝕊 𝕀𝕊 ℍ𝔸ℕ𝕊-𝕄𝔻-ℕ𝔼𝕎-𝕌ℙ𝔻𝔸𝕋𝔼 2025
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-©*2024-2099 𝐇𝐀𝐍𝐒-𝐅𝐑𝐎𝐌-𝐓𝐀𝐍𝐙𝐀𝐍𝐈𝐀🇹🇿✌️*
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).send({ error: 'Method not allowed' });
+  }
 
-_Don't Forget To Give Star To My Repo_`
- await Pair_Code_By_Gifted_Tech.sendMessage(Pair_Code_By_Gifted_Tech.user.id,{text:GIFTED_MD_TEXT},{quoted:session})
- 
+  const id = makeid();
+  let num = req.query.number;
 
-        await delay(100);
-        await Pair_Code_By_Gifted_Tech.ws.close();
-        return await removeFile('./temp/'+id);
-            } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(10000);
-                    GIFTED_MD_PAIR_CODE();
-                }
-            });
-        } catch (err) {
-            console.log("service restated");
-            await removeFile('./temp/'+id);
-         if(!res.headersSent){
-            await res.send({code:"Service Unavailable"});
-         }
+  if (!num || !/^\d+$/.test(num)) {
+    return res.status(400).send({ error: 'Invalid number format' });
+  }
+
+  async function generatePairCode() {
+    const { state, saveCreds } = await useMultiFileAuthState(`/tmp/${id}`);
+
+    try {
+      const tech = Gifted_Tech({
+        auth: {
+          creds: state.creds,
+          keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' })),
+        },
+        printQRInTerminal: false,
+        logger: pino({ level: 'fatal' }),
+        browser: ['Chrome (Linux)', '', ''],
+      });
+
+      if (!tech.authState.creds.registered) {
+        await delay(1500);
+        num = num.replace(/[^0-9]/g, '');
+        const code = await tech.requestPairingCode(num);
+
+        if (!res.headersSent) {
+          return res.status(200).send({ code });
         }
+      }
+
+      tech.ev.on('creds.update', saveCreds);
+
+      tech.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect } = update;
+
+        if (connection === 'open') {
+          const sessionData = fs.readFileSync(`/tmp/${id}/creds.json`);
+          const b64data = Buffer.from(sessionData).toString('base64');
+
+          await tech.sendMessage(tech.user.id, {
+            text: `Session connected: ${b64data}`,
+          });
+
+          await tech.ws.close();
+          removeFile(`/tmp/${id}`);
+        } else if (connection === 'close' && lastDisconnect?.error) {
+          console.error('Connection error:', lastDisconnect.error);
+          await delay(10000);
+          generatePairCode();
+        }
+      });
+    } catch (err) {
+      console.error('Error during pairing:', err.message);
+      removeFile(`/tmp/${id}`);
+      if (!res.headersSent) {
+        res.status(500).send({ error: 'Service unavailable' });
+      }
     }
-    return await GIFTED_MD_PAIR_CODE()
-});
-module.exports = router
+  }
+
+  await generatePairCode();
+}
